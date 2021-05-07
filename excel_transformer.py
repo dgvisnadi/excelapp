@@ -15,16 +15,6 @@ input_dir = sys.argv[1]
 # Output Path
 output_dir = sys.argv[2]
 
-# https://docs.google.com/spreadsheets/d/1ad5VKp6R7DIb-DUPSEvFeo9I8-rEmD1CdZIKsgxXhzo/edit#gid=1905366038
-SPREADSHEET_ID = '1ad5VKp6R7DIb-DUPSEvFeo9I8-rEmD1CdZIKsgxXhzo'
-RANGE_NAME = 'format_mapping'
-URL = 'https://docs.google.com/spreadsheets/d/{0}/gviz/tq?tqx=out:csv&sheet={1}'.format(SPREADSHEET_ID, RANGE_NAME)
-df_format_mapping = pd.read_csv(URL)
-
-format_mapping = dict()
-for i in range(len(df_format_mapping)):
-    format_mapping[df_format_mapping['Format'][i]] = df_format_mapping['Class'][i]
-
 ###############################
 ############ UTILS ############
 ###############################
@@ -121,7 +111,6 @@ data_strategy['Share'] = round((data_strategy['Share'] / data_strategy['Share'].
 data_strategy['Datenstrategie'] = data_strategy['Datenstrategie'].apply(lambda x: x[:30])
 
 ## CHANNEL TABLE ##    
-df['Disney Kanal'] = df['Format'].apply(lambda x: format_mapping[x] if x in df_format_mapping['Format'].tolist() else 'Unknown Channel')
 df_channel = df.groupby('Disney Kanal').agg({'Media Budget n/n/-':'sum'}).sort_values('Media Budget n/n/-', ascending=False).reset_index(drop=False)
 df_channel.columns = ['Kanal','Share']
 df_channel['Share'] = round((df_channel['Share'] / df_channel['Share'].sum()),2)
@@ -173,7 +162,7 @@ def top_channel_view(channel_name, view_type):
 
 df_main['Format'] = df_main['Disney Kanal'].apply(lambda x: top_channel(x, 'Format'))
 df_main['Top Platzierungen'] = df_main['Disney Kanal'].apply(lambda x: top_channel(x, 'Publisher'))
-df_main['TKP'] = (df_main['Media Budget n/n/-'] / (df_main['est. Ad Impressions']/1000)).round(2)
+df_main['TKP'] = (df_main['Media Budget n/n/-'] / df_main['est. Ad Impressions']).round(2)
 df_main['Long Video Views'] = df_main['Disney Kanal'].apply(lambda x: top_channel_view(x, ':30 Sek.'))
 df_main['Short Video Views'] = df_main['Disney Kanal'].apply(lambda x: top_channel_view(x, ':6 Sek.')) 
 df_main['Long Video Views'] = df_main['Long Video Views'].apply(lambda x: int(x.replace(',','')))
