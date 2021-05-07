@@ -262,7 +262,6 @@ df_main['Long Video Views'] = df_main['Long Video Views'].apply(lambda x: german
 df_main['Short Video Views'] = df_main['Short Video Views'].apply(lambda x: german_style(f"{x :,d}"))
 df_main['Website Klicks'] = df_main['Website Klicks'].apply(lambda x: german_style(f"{x :,d}"))
 
-
 ###############################
 ######## CREATE EXCEL #########
 ###############################
