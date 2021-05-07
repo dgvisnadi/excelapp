@@ -277,7 +277,7 @@ workbook = writer.book
 worksheet = writer.sheets['Mediaplan Abstract']
 
 # INSERT IMAGE
-worksheet.insert_image('B2', 'input/logo.png')
+worksheet.insert_image('B2', 'webapp/static/disneylogo.png')
 
 # HIDE GRIDLINES
 worksheet.hide_gridlines(option=2)
