@@ -134,18 +134,10 @@ graph_device = pd.DataFrame({'Device':['Desktop','Tablet','Mobile','Smart TV'],
                              'Share':device_share})
 
 # Info Box Data
-df_sl_views = df.groupby('Format Spezifikation').sum().round(2)[['est. Views']].reset_index(drop=False)
-try:
-    short_views = df_sl_views[df_sl_views['Format Spezifikation']==':30 Sek.']['est. Views'].values[0]
-except:
-    short_views = 0
-try:
-    long_views = df_sl_views[df_sl_views['Format Spezifikation']==':6 Sek.']['est. Views'].values[0]
-except: 
-    long_views = 0
+df_sl_views = df['est. Views'].sum()
 
 ## MAIN TABLE
-df_main = df.groupby('Disney Kanal').sum().round(2)[['Media Budget n/n/-','est. Ad Impressions','est. Ad Clicks']].reset_index(drop=False)
+df_main = df.groupby('Disney Kanal').sum().round(2)[['Media Budget n/n/-','est. Ad Impressions','est. Ad Clicks','est. Views']].reset_index(drop=False)
 df_main['est. Ad Impressions'] = df_main['est. Ad Impressions'].apply(lambda x: int(x))
 df_main['est. Ad Clicks'] = df_main['est. Ad Clicks'].apply(lambda x: int(x))
 
@@ -155,25 +147,21 @@ def top_channel(channel_name, feature):
     data_sort = [i for i in reversed(data_filter)]
     return '\n'.join(data_sort[:5])
 
-def top_channel_view(channel_name, view_type):
-    view_sum = df[(df['Disney Kanal']==channel_name)&
-                   (df['Format Spezifikation']==view_type)]['est. Views'].sum()
-    return f"{view_sum:,d}"
+def top_channel_view(channel_name):
+    view_sum = df[(df['Disney Kanal']==channel_name)]['est. Views'].sum()
+    return f"{view_sum :,d}"
+
 
 df_main['Format'] = df_main['Disney Kanal'].apply(lambda x: top_channel(x, 'Format'))
 df_main['Top Platzierungen'] = df_main['Disney Kanal'].apply(lambda x: top_channel(x, 'Publisher'))
-df_main['TKP'] = (df_main['Media Budget n/n/-'] / df_main['est. Ad Impressions']).round(2)
-df_main['Long Video Views'] = df_main['Disney Kanal'].apply(lambda x: top_channel_view(x, ':30 Sek.'))
-df_main['Short Video Views'] = df_main['Disney Kanal'].apply(lambda x: top_channel_view(x, ':6 Sek.')) 
-df_main['Long Video Views'] = df_main['Long Video Views'].apply(lambda x: int(x.replace(',','')))
-df_main['Short Video Views'] = df_main['Short Video Views'].apply(lambda x: int(x.replace(',','')))   
+df_main['TKP'] = (df_main['Media Budget n/n/-'] / (df_main['est. Ad Impressions'] / 1000)).round(2) # TKP = Budget / (Impressions/1000)
+df_main['Video Views'] = df_main['Disney Kanal'].apply(lambda x: top_channel_view(x))
 df_main['Datenstrategie'] = len(df_main)*[""]
 df_main['Gewichtung'] = df_main['Media Budget n/n/-'].apply(lambda x: x/(handling_tech_fee+df_main['Media Budget n/n/-'].sum()))
-df_main['Video View Type'] = len(df_main)*[""]
 df_main['Sichtbarkeit (Prognose)'] = len(df_main)*[""]
 df_main['Sichtbarkeit (Benchmark)'] = len(df_main)*[""]
-df_main['Cost per Long Video View (Prognose)'] = len(df_main)*[""]
-df_main['Cost per Long Video View (Benchmark)'] = len(df_main)*[""]
+df_main['Cost per Video View'] = (df_main['Media Budget n/n/-'] / df_main['est. Views'])
+df_main['Cost per Video View'] = df_main['Cost per Video View'].apply(lambda x:  x if str(x)!='inf' else 0)
 
 ## INFO BOX 
 info_fields = [
@@ -183,10 +171,8 @@ info_fields = [
     'Ende',
     'Laufzeit',
     'Budget',
-    'Short Views',
-    'Long Views',
-    'Ø CPV Short',
-    'Ø CPV Long',
+    'Video Views',
+    'Ø CPV',
     'Ø TKP'
 ]
 
@@ -197,11 +183,9 @@ info_values = [
     info_box_values[8].split('-')[1],
     f"{days_between(info_box_values[8].split('-')[0], info_box_values[8].split('-')[1])} Tage",
     german_style(f"{round(float(handling_tech_fee+df_main['Media Budget n/n/-'].sum()),2):,} €"),
-    german_style(f"{short_views:,d}"),
-    german_style(f"{long_views:,d}"),
-    "",
-    "",
-    ""
+    german_style(f"{df_sl_views:,d}"),
+    german_style(f"{round(df_main['Cost per Video View'].mean(),2) :,.2f} €" ),
+    german_style(f"{round(df_main['TKP'].mean(),2) :,.2f} €" )
 ]
 
 df_infobox = pd.DataFrame({'Rahmendaten': info_fields,
@@ -218,38 +202,32 @@ df_main = df_main[[
     'Media Budget n/n/-', 
     'est. Ad Impressions',
     'TKP',
-    'Video View Type',
-    'Long Video Views', 
-    'Short Video Views', 
-    'est. Ad Clicks', 
+    'Video Views', 
     'Sichtbarkeit (Prognose)', 
     'Sichtbarkeit (Benchmark)',
-    'Cost per Long Video View (Prognose)',
-    'Cost per Long Video View (Benchmark)'
+    'Cost per Video View',
 ]]
 
 df_main.rename(columns={
     'Disney Kanal':'Kanal',
     'Media Budget n/n/-':'Budget',
-    'est. Ad Impressions':'Impressions',
-    'est. Ad Clicks':'Website Klicks'
-}, inplace=True)
+    'est. Ad Impressions':'Impressions'
+    }, inplace=True)
 
 # Main Table TOTALs
 total_budget = german_style(f"{df_main['Budget'].sum().round(2) :,.2f} €")
 total_tkp = german_style(f"{df_main['TKP'].sum().round(2) :,.2f} €" )
+total_cpvv = german_style(f"{df_main['Cost per Video View'].sum().round(2) :,.2f} €" )
 total_impressions = german_style(f"{df_main['Impressions'].sum() :,d}")
-total_lvv = german_style(f"{df_main['Long Video Views'].sum() :,d}" )
-total_svv = german_style(f"{df_main['Short Video Views'].sum() :,d}" )
+total_lvv = german_style(f"{df_sl_views :,d}" )
 total_budget_fee = german_style(f"{round(df_main['Budget'].sum()+handling_tech_fee,2) :,} €" )
 handling_tech_fee = german_style(f"{round(handling_tech_fee,2) :,} €" )
 
 df_main['Budget'] = df_main['Budget'].apply(lambda x: german_style(f"{round(x,2) :,.2f} €"))
 df_main['TKP'] = df_main['TKP'].apply(lambda x: german_style(f"{round(x,2) :,.2f} €"))
 df_main['Impressions'] = df_main['Impressions'].apply(lambda x: german_style(f"{x :,d}"))
-df_main['Long Video Views'] = df_main['Long Video Views'].apply(lambda x: german_style(f"{x :,d}"))
-df_main['Short Video Views'] = df_main['Short Video Views'].apply(lambda x: german_style(f"{x :,d}"))
-df_main['Website Klicks'] = df_main['Website Klicks'].apply(lambda x: german_style(f"{x :,d}"))
+df_main['Cost per Video View'] = df_main['Cost per Video View'].apply(lambda x: german_style(f"{round(x,2) :,.2f} €"))
+
 
 ###############################
 ######## CREATE EXCEL #########
@@ -330,13 +308,13 @@ for i, column_header in enumerate(main_columns):
     worksheet.write(f'{abc[i+1]}25', column_header, format_header_2)
     
     for j, values in enumerate(df_main[column_header].tolist()):
-        if column_header in ['Budget','TKP']:
+        if column_header in ['Budget','TKP','Cost per Video View']:
             worksheet.write(f'{abc[i+1]}{j+1+25}', values, format_string) 
         elif column_header == 'Gewichtung': 
             worksheet.write(f'{abc[i+1]}{j+1+25}', values, format_row_border_perc)
         elif column_header == 'Kanal': 
             worksheet.write(f'{abc[i+1]}{j+1+25}', values, format_row_border_kanal)
-        elif column_header in ['Impressions','Video View Type','Long Video Views','Short Video Views','Website Klicks']:
+        elif column_header in ['Impressions','Video Views']:
             worksheet.write(f'{abc[i+1]}{j+1+25}', values, format_string)
         else:
             worksheet.write(f'{abc[i+1]}{j+1+25}', values, format_row_border)
@@ -358,8 +336,8 @@ worksheet.write(f'G{len(df_main)+2+25}', total_budget_fee, format_total)
 # Impressions | 
 worksheet.write(f'H{len(df_main)+2+25}', total_impressions, format_total)
 worksheet.write(f'I{len(df_main)+2+25}', total_tkp, format_total)
-worksheet.write(f'K{len(df_main)+2+25}', total_lvv, format_total)
-worksheet.write(f'L{len(df_main)+2+25}', total_svv, format_total)
+worksheet.write(f'J{len(df_main)+2+25}', total_lvv, format_total)
+worksheet.write(f'M{len(df_main)+2+25}', total_cpvv, format_total)
 
 
 # COLUMN WIDTH
