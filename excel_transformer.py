@@ -163,6 +163,7 @@ df_main['Sichtbarkeit (Benchmark)'] = len(df_main)*[""]
 df_main['Cost per Video View'] = (df_main['Media Budget n/n/-'] / df_main['est. Views'])
 df_main['Cost per Video View'] = df_main['Cost per Video View'].apply(lambda x:  x if str(x)!='inf' else 0)
 
+
 ## INFO BOX 
 info_fields = [
     'LOB',
@@ -185,7 +186,7 @@ info_values = [
     german_style(f"{round(float(handling_tech_fee+df_main['Media Budget n/n/-'].sum()),2):,} €"),
     german_style(f"{df_sl_views:,d}"),
     german_style(f"{round(df_main['Cost per Video View'].mean(),2) :,.2f} €" ),
-    german_style(f"{round(df_main['TKP'].mean(),2) :,.2f} €" )
+    german_style(f"{round(sum(df_main['TKP'] * df_main['Media Budget n/n/-']) / sum(df_main['Media Budget n/n/-']),2) :,.2f} €" )
 ]
 
 df_infobox = pd.DataFrame({'Rahmendaten': info_fields,
@@ -216,7 +217,7 @@ df_main.rename(columns={
 
 # Main Table TOTALs
 total_budget = german_style(f"{df_main['Budget'].sum().round(2) :,.2f} €")
-total_tkp = german_style(f"{df_main['TKP'].sum().round(2) :,.2f} €" )
+total_tkp = german_style(f"{round(sum(df_main['TKP'] * df_main['Media Budget n/n/-']) / sum(df_main['Media Budget n/n/-']),2) :,.2f} €" )
 total_cpvv = german_style(f"{df_main['Cost per Video View'].sum().round(2) :,.2f} €" )
 total_impressions = german_style(f"{df_main['Impressions'].sum() :,d}")
 total_lvv = german_style(f"{df_sl_views :,d}" )
