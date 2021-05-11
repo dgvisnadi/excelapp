@@ -445,7 +445,7 @@ chart_strategy.set_chartarea({
 
 chart_strategy.set_x_axis({'name': 'Zielgruppe'})
 chart_strategy.set_y_axis({'name': 'Share %', 'major_gridlines': {'visible': False}})
-chart_strategy.set_title({'name': 'Datenstrategie'})
+chart_strategy.set_title({'name': 'Budget pro Zielgruppe'})
 chart_strategy.set_legend({'position': 'none'})
 
 # # Insert the chart into the worksheet.
