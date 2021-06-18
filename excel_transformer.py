@@ -149,15 +149,15 @@ def top_channel(channel_name, feature):
 
 def top_channel_view(channel_name):
     view_sum = df[(df['Disney Kanal']==channel_name)]['est. Views'].sum()
-    return f"{view_sum :,d}"
+    return f"{int(view_sum) :,d}"
 
 
 df_main['Format'] = df_main['Disney Kanal'].apply(lambda x: top_channel(x, 'Format'))
 df_main['Top Platzierungen'] = df_main['Disney Kanal'].apply(lambda x: top_channel(x, 'Publisher'))
-df_main['TKP'] = (df_main['Media Budget n/n/-'] / (df_main['est. Ad Impressions'] / 1000)).round(2) # TKP = Budget / (Impressions/1000)
+df_main['TKP'] = df_main.apply(lambda x: round((x['Media Budget n/n/-'] / (x['est. Ad Impressions'] / 1000)),2) if x['est. Ad Impressions'] > 0 else 0, axis=1) # TKP = Budget / (Impressions/1000)
 df_main['Video Views'] = df_main['Disney Kanal'].apply(lambda x: top_channel_view(x))
 df_main['Datenstrategie'] = len(df_main)*[""]
-df_main['Gewichtung'] = df_main['Media Budget n/n/-'].apply(lambda x: x/(handling_tech_fee+df_main['Media Budget n/n/-'].sum()))
+df_main['Gewichtung'] = df_main['Media Budget n/n/-'].apply(lambda x: x/(df_main['Media Budget n/n/-'].sum()))
 df_main['Sichtbarkeit (Prognose)'] = len(df_main)*[""]
 df_main['Sichtbarkeit (Benchmark)'] = len(df_main)*[""]
 df_main['Cost per Video View'] = (df_main['Media Budget n/n/-'] / df_main['est. Views'])
@@ -185,7 +185,7 @@ info_values = [
     info_box_values[8].split('-')[1],
     f"{days_between(info_box_values[8].split('-')[0], info_box_values[8].split('-')[1])} Tage",
     german_style(f"{round(float(handling_tech_fee+df_main['Media Budget n/n/-'].sum()),2):,} €"),
-    german_style(f"{df_sl_views:,d}"),
+    german_style(f"{int(df_sl_views) :,d}"),
     german_style(f"{round(df_main['Cost per Video View'].mean(),2) :,.2f} €" ),
     german_style(f"{round(sum(df_main['TKP'] * df_main['Media Budget n/n/-']) / sum(df_main['Media Budget n/n/-']),2) :,.2f} €" )
 ]
@@ -220,14 +220,14 @@ df_main.rename(columns={
 total_budget = german_style(f"{df_main['Budget'].sum().round(2) :,.2f} €")
 total_tkp = german_style(f"{tkp_weighted :,.2f} €" )
 total_cpvv = german_style(f"{df_main['Cost per Video View'].sum().round(2) :,.2f} €" )
-total_impressions = german_style(f"{df_main['Impressions'].sum() :,d}")
-total_lvv = german_style(f"{df_sl_views :,d}" )
+total_impressions = german_style(f"{int(df_main['Impressions'].sum()) :,d}")
+total_lvv = german_style(f"{int(df_sl_views) :,d}" )
 total_budget_fee = german_style(f"{round(df_main['Budget'].sum()+handling_tech_fee,2) :,} €" )
 handling_tech_fee = german_style(f"{round(handling_tech_fee,2) :,} €" )
 
 df_main['Budget'] = df_main['Budget'].apply(lambda x: german_style(f"{round(x,2) :,.2f} €"))
 df_main['TKP'] = df_main['TKP'].apply(lambda x: german_style(f"{round(x,2) :,.2f} €"))
-df_main['Impressions'] = df_main['Impressions'].apply(lambda x: german_style(f"{x :,d}"))
+df_main['Impressions'] = df_main['Impressions'].apply(lambda x: german_style(f"{int(x) :,d}"))
 df_main['Cost per Video View'] = df_main['Cost per Video View'].apply(lambda x: german_style(f"{round(x,2) :,.2f} €"))
 
 
