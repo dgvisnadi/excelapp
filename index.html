@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Disney Abstract Creator</title>
+    <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
+    <link rel="stylesheet" href="{% static 'css/demo.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+</head>
+<body class="bground">
+<div class="content">
+<div class="info">
+    <div class="info__logo"><img class="info__logo_img" src="{% static 'logo.png' %}"></div>
+    <div class="info__primary">Disney Abstract Creator</div>
+    <div class="info__secondary">Anleitung: Einfach den OWIz Export per Drag & Drop hochladen.</div>
+</div>
+<!-- Form to upload the files -->
+<form class="upload" method="POST" action="/upload_xls" enctype="multipart/form-data" novalidate="">{% csrf_token %}
+    <!-- The `canvas` element to draw the particles -->
+    <canvas class="upload__canvas"></canvas>
+    <!-- The upload icon -->
+    <div class="upload__icon"><svg viewBox="0 0 470 470"><path d="m158.7 177.15 62.8-62.8v273.9c0 7.5 6 13.5 13.5 13.5s13.5-6 13.5-13.5v-273.9l62.8 62.8c2.6 2.6 6.1 4 9.5 4 3.5 0 6.9-1.3 9.5-4 5.3-5.3 5.3-13.8 0-19.1l-85.8-85.8c-2.5-2.5-6-4-9.5-4-3.6 0-7 1.4-9.5 4l-85.8 85.8c-5.3 5.3-5.3 13.8 0 19.1 5.2 5.2 13.8 5.2 19 0z"></path></svg></div>
+</form>
+<div class="loading">
+    <div class="spinner-border text-light"></div><h5 class="text-light">Konvertierung in Abstract wird durchgeführt...</h5>
+</div>
+</div>
+<script src='{% static "js/anime.min.js" %}'></script>
+<script src='{% static "js/demo.js" %}'></script>
+</body>
+</html>
