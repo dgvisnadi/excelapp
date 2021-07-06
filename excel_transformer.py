@@ -20,12 +20,23 @@ output_dir = sys.argv[2]
 ###############################
 
 def days_between(d1, d2):
-    d1 = datetime.strptime(d1, "%d.%m.%Y")
-    d2 = datetime.strptime(d2, "%d.%m.%Y")
+
+    try:
+        d1 = datetime.strptime(d1, "%d.%m.%Y")
+    except:
+        print(d1)
+        pass
+    try:
+        d2 = datetime.strptime(d2, "%d.%m.%Y")
+    except:
+        pass   
     return abs((d2 - d1).days)
 
 def string_to_date(d1):
-    d1 = datetime.strptime(d1, "%d.%m.%Y")
+    try:
+        d1 = datetime.strptime(d1, "%d.%m.%Y")
+    except:
+        pass
     return d1
 
 def day_series(start, ende):
@@ -82,6 +93,10 @@ df = df[~df['Publisher'].str.contains('Kostenplan').fillna(False)]
 df = df[df['Publisher'].notna()]
 df = df[df['Start'].notna()]
 
+zielgrp = pd.DataFrame(df.iloc[:,df.columns.get_loc("Handling & Tech-Fee")+1:].fillna(0).multiply(df["Media Budget n/n/-"], axis="index").sum(), columns=['Budget']).reset_index()
+zielgrp.columns = ['ZielGruppe', 'Share']
+zielgrp = zielgrp[zielgrp['Share']>0]
+zielgrp['Share'] = zielgrp['Share'] / zielgrp['Share'].sum()
 
 ## BUDGET TABLE ##
 df_timeline = df[['Start','Ende','Media Budget n/n/-']].dropna()
@@ -142,10 +157,9 @@ df_main['est. Ad Impressions'] = df_main['est. Ad Impressions'].apply(lambda x: 
 df_main['est. Ad Clicks'] = df_main['est. Ad Clicks'].apply(lambda x: int(x))
 
 def top_channel(channel_name, feature):
-    data = df.groupby(['Disney Kanal', feature]).sum().round(2)[['Media Budget n/n/-']].reset_index()
+    data = df.groupby(['Disney Kanal', 'Format', 'Publisher']).sum().round(2)[['Media Budget n/n/-']].sort_values('Media Budget n/n/-', ascending=False).reset_index()
     data_filter = data[data['Disney Kanal']==channel_name][feature].tolist()
-    data_sort = [i for i in reversed(data_filter)]
-    return '\n'.join(data_sort[:5])
+    return '\n'.join(data_filter[:5])
 
 def top_channel_view(channel_name):
     view_sum = df[(df['Disney Kanal']==channel_name)]['est. Views'].sum()
@@ -425,19 +439,20 @@ worksheet.insert_chart('F7', chart_device)
 
 
 # STRATEGY
-data_strategy.to_excel(writer, sheet_name='data', startcol=10, startrow=0)
+zielgrp.to_excel(writer, sheet_name='data', startcol=10, startrow=0)
 
-for row_nb, value in enumerate(data_strategy.Share.tolist()):
+for row_nb, value in enumerate(zielgrp.Share.tolist()):
     worksheet2.write(row_nb+1, 12, value, graph_perc)
     
-chart_strategy = workbook.add_chart({'type': 'column'})
+chart_strategy = workbook.add_chart({'type': 'pie'})
 chart_strategy.add_series({
-    'categories': f'=data!$L$2:$L${len(data_strategy)+1}',
-    'values':     f'=data!$M$2:$M${len(data_strategy)+1}',
-    'gap':        2,
-    'fill':   {'color': '#4285F4'}
+    'categories': f"='data'!$L$2:$L${len(zielgrp)+1}",
+    'values':     f"='data'!$M$2:$M${len(zielgrp)+1}",
+    # 'gap':        2,
+    # 'fill':   {'color': '#4285F4'}
 })
 
+# chart_strategy.set_style(10)
 chart_strategy.set_chartarea({
     'border': {'none': True},
     'fill': {'none': True},
@@ -446,7 +461,6 @@ chart_strategy.set_chartarea({
 chart_strategy.set_x_axis({'name': 'Zielgruppe'})
 chart_strategy.set_y_axis({'name': 'Share %', 'major_gridlines': {'visible': False}})
 chart_strategy.set_title({'name': 'Budget pro Zielgruppe'})
-chart_strategy.set_legend({'position': 'none'})
 
 # # Insert the chart into the worksheet.
 worksheet.insert_chart('I7', chart_strategy)
