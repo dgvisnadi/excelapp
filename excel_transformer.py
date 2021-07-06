@@ -93,7 +93,17 @@ df = df[~df['Publisher'].str.contains('Kostenplan').fillna(False)]
 df = df[df['Publisher'].notna()]
 df = df[df['Start'].notna()]
 
-zielgrp = pd.DataFrame(df.iloc[:,df.columns.get_loc("Handling & Tech-Fee")+1:].fillna(0).multiply(df["Media Budget n/n/-"], axis="index").sum(), columns=['Budget']).reset_index()
+def string_to_perc(x):
+    try:
+        return float(x.strip('%'))/100
+    except:
+        return x
+
+zgr = df.iloc[:,df.columns.get_loc("Handling & Tech-Fee")+1:].fillna(0)
+for col in zgr.columns:
+    zgr[col] = zgr[col].apply(lambda x: string_to_perc(x))
+
+zielgrp = pd.DataFrame(zgr.multiply(df["Media Budget n/n/-"], axis="index").sum(), columns=['Budget']).reset_index()
 zielgrp.columns = ['ZielGruppe', 'Share']
 zielgrp = zielgrp[zielgrp['Share']>0]
 zielgrp['Share'] = zielgrp['Share'] / zielgrp['Share'].sum()
