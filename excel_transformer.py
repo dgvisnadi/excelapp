@@ -95,6 +95,7 @@ df = df[df['Start'].notna()]
 
 def string_to_perc(x):
     try:
+        x = x.replace(',','.')
         return float(x.strip('%'))/100
     except:
         return x
