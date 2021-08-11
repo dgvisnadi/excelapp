@@ -62,7 +62,7 @@ df = pd.read_excel(input_dir)
 
 # Info Box
 info_box_values = df.dropna(how='all').iloc[:13,2].dropna(how='all').tolist()
-handling_tech_fee = round(df[df['Unnamed: 1']=='Handling & Tech-Fee']['Unnamed: 22'].values[0], 2)
+handling_tech_fee = round(sum(df.iloc[df[df['Unnamed: 1']=='Handling & Tech-Fee'].index[0],3:].fillna(0).tolist()),2)
 
 # Row 23 will become header
 df.columns = df.iloc[23]
